@@ -12,6 +12,7 @@ import os
 from htmlComparison import htmlComparison
 from difflib import SequenceMatcher
 
+
 def getstorename(entry, str1):
     parts = entry.split(",")
     if len(parts) > 1:
@@ -20,11 +21,13 @@ def getstorename(entry, str1):
         return f"{name_part}, {city_part}"
     return entry  # 如果没有处理，就返回原字符串
 
-def saveerror(item:str):
+
+def saveerror(item: str):
     with open(r".\ErrorStoreplace.csv", mode="w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow([item])
-        
+
+
 Storeplace = []
 with open(r".\MergedStoreplace.csv", mode="r", newline="", encoding="utf-8") as file:
     for line in file:
@@ -43,8 +46,6 @@ for i in Storeplace:
     else:
         dict1[key] = []
         dict1[key].append(i)
-
-
 
 
 user_data_dir = os.path.join(os.getenv("LOCALAPPDATA"), r"Google\Chrome\User Data")
@@ -104,9 +105,10 @@ def save(div_elements, driver):
         print("没有足够的 div 元素可供选择")
     time.sleep(3)
 
+
 driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()), options=chrome_options
-    )
+    service=Service(ChromeDriverManager().install()), options=chrome_options
+)
 for i in Storeplace:
     try:
         # 進入網站
@@ -128,7 +130,9 @@ for i in Storeplace:
                 )
             )
 
-            div_elements = suggestion_grid.find_elements(By.CSS_SELECTOR, "div[data-index]")
+            div_elements = suggestion_grid.find_elements(
+                By.CSS_SELECTOR, "div[data-index]"
+            )
             div_count = len(div_elements)
 
             if div_count == 1:
@@ -143,21 +147,32 @@ for i in Storeplace:
         else:
             searchbutton = WebDriverWait(driver, 30).until(
                 EC.visibility_of_element_located(
-                    (By.CSS_SELECTOR, 'button[aria-label="搜尋"]'))
+                    (By.CSS_SELECTOR, 'button[aria-label="搜尋"]')
+                )
             )
             searchbutton.click()
             time.sleep(3)
-            highest_similarity=0
-            if driver.find_elements(By.CSS_SELECTOR, 'div.m6QErb.DxyBCb.kA9KIf.dS8AEf.XiKgde.ecceSd'):
-                div_elements = driver.find_elements(By.CSS_SELECTOR, 'div.Nv2PK.THOPZb.CpccDe ')
-                div_list=[]
+            highest_similarity = 0
+            if driver.find_elements(
+                By.CSS_SELECTOR, "div.m6QErb.DxyBCb.kA9KIf.dS8AEf.XiKgde.ecceSd"
+            ):
+                div_elements = driver.find_elements(
+                    By.CSS_SELECTOR, "div.Nv2PK.THOPZb.CpccDe "
+                )
+                div_list = []
                 for div in div_elements:
                     # 抓取 qBF1Pd fontHeadlineSmall 的文字
-                    title_element = div.find_element(By.CSS_SELECTOR, 'div.qBF1Pd.fontHeadlineSmall')
+                    title_element = div.find_element(
+                        By.CSS_SELECTOR, "div.qBF1Pd.fontHeadlineSmall"
+                    )
                     title_text = title_element.text
                     # 抓取 'Tiệm Cơm Thố Chuyên Ký' 和 'Ton That Dam'
-                    address_element = div.find_elements(By.CSS_SELECTOR, 'div.W4Efsd span')
-                    address_text = " ".join([span.text for span in address_element if span.text])
+                    address_element = div.find_elements(
+                        By.CSS_SELECTOR, "div.W4Efsd span"
+                    )
+                    address_text = " ".join(
+                        [span.text for span in address_element if span.text]
+                    )
                     if "餐廳" in address_text:
                         similarity = SequenceMatcher(None, address_text, i).ratio()
                         if similarity > highest_similarity:
@@ -168,12 +183,10 @@ for i in Storeplace:
                     closest_element.click()
                     save(div_elements, driver)
                 else:
-                    print("未找到相似的店家。")    
+                    print("未找到相似的店家。")
                     saveerror(i)
-    except Exception as ex: 
+    except Exception as ex:
         print(f"处理店名 {i} 时出错: {ex}")
         saveerror(i)
 
 driver.quit()
-
-

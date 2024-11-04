@@ -5,11 +5,12 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 import csv
 import time
 import os
 from htmlComparison import htmlComparison
-
+from difflib import SequenceMatcher
 
 def getstorename(entry, str1):
     parts = entry.split(",")
@@ -102,15 +103,13 @@ def save(div_elements, driver):
         print("没有足够的 div 元素可供选择")
     time.sleep(3)
 
-
-for i in Storeplace:
-    # 開啟Chrome
-    driver = webdriver.Chrome(
+driver = webdriver.Chrome(
         service=Service(ChromeDriverManager().install()), options=chrome_options
     )
-    # 進入網站
-    driver.get("https://www.google.com/maps?authuser=0")
+for i in Storeplace:
     try:
+        # 進入網站
+        driver.get("https://www.google.com/maps?authuser=0")
         # 輸入搜尋資料
         search_box = WebDriverWait(driver, 30).until(
             EC.visibility_of_element_located(
@@ -121,38 +120,61 @@ for i in Storeplace:
         search_box.send_keys(f"{i}")  # 修正变量名
         time.sleep(3)
         # 等待下拉選單
-        suggestion_grid = WebDriverWait(driver, 30).until(
-            EC.visibility_of_element_located(
-                (By.CSS_SELECTOR, 'div[role="grid"][aria-label="建議"]')
+        if driver.find_elements(By.CSS_SELECTOR, 'div[role="grid"][aria-label="建議"]'):
+            suggestion_grid = WebDriverWait(driver, 30).until(
+                EC.visibility_of_element_located(
+                    (By.CSS_SELECTOR, 'div[role="grid"][aria-label="建議"]')
+                )
             )
-        )
 
-        div_elements = suggestion_grid.find_elements(By.CSS_SELECTOR, "div[data-index]")
-        div_count = len(div_elements)
+            div_elements = suggestion_grid.find_elements(By.CSS_SELECTOR, "div[data-index]")
+            div_count = len(div_elements)
 
-        if div_count == 1:
-            suggestion = div_elements[0]
-            suggestion.click()
-            save(div_elements, driver)
-        elif div_count > 1:
-            select = htmlComparison(driver.page_source, i)
-            suggestion = div_elements[select]
-            suggestion.click()
-            save(div_elements, driver)
+            if div_count == 1:
+                suggestion = div_elements[0]
+                suggestion.click()
+                save(div_elements, driver)
+            elif div_count > 1:
+                select = htmlComparison(driver.page_source, i)
+                suggestion = div_elements[select]
+                suggestion.click()
+                save(div_elements, driver)
         else:
             searchbutton = WebDriverWait(driver, 30).until(
                 EC.visibility_of_element_located(
-                    (By.CSS_SELECTOR, 'button[aria-label="搜尋"]')
-                )
+                    (By.CSS_SELECTOR, 'button[aria-label="搜尋"]'))
             )
             searchbutton.click()
-            save(div_elements, driver)
-        processed_storeplaces.append(i)
-        unprocessed_storeplaces.remove(i)
-
-    except Exception as ex:
+            time.sleep(3)
+            highest_similarity=0
+            if driver.find_elements(By.CSS_SELECTOR, 'div.m6QErb.DxyBCb.kA9KIf.dS8AEf.XiKgde.ecceSd'):
+                div_elements = driver.find_elements(By.CSS_SELECTOR, 'div.Nv2PK.THOPZb.CpccDe ')
+                div_list=[]
+                for div in div_elements:
+                    # 抓取 qBF1Pd fontHeadlineSmall 的文字
+                    title_element = div.find_element(By.CSS_SELECTOR, 'div.qBF1Pd.fontHeadlineSmall')
+                    title_text = title_element.text
+                    # 抓取 'Tiệm Cơm Thố Chuyên Ký' 和 'Ton That Dam'
+                    address_element = div.find_elements(By.CSS_SELECTOR, 'div.W4Efsd span')
+                    address_text = " ".join([span.text for span in address_element if span.text])
+                    if "餐廳" in address_text:
+                        similarity = SequenceMatcher(None, address_text, i).ratio()
+                        if similarity > highest_similarity:
+                            highest_similarity = similarity
+                            closest_element = div
+                if closest_element:
+                    time.sleep(1)
+                    closest_element.click()
+                    save(div_elements, driver)
+                else:
+                    print("未找到相似的店家。")    
+                    error.append(i)
+    except Exception as ex: 
         print(f"处理店名 {i} 时出错: {ex}")
         error.append(i)
+    processed_storeplaces.append(i)
+    unprocessed_storeplaces.remove(i)
+
 driver.quit()
 
 

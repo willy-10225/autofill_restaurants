@@ -20,7 +20,11 @@ def getstorename(entry, str1):
         return f"{name_part}, {city_part}"
     return entry  # 如果没有处理，就返回原字符串
 
-
+def saveerror(item:str):
+    with open(r".\ErrorStoreplace.csv", mode="w", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow([item])
+        
 Storeplace = []
 with open(r".\MergedStoreplace.csv", mode="r", newline="", encoding="utf-8") as file:
     for line in file:
@@ -41,9 +45,7 @@ for i in Storeplace:
         dict1[key].append(i)
 
 
-processed_storeplaces = []
-unprocessed_storeplaces = Storeplace[:]
-error = []
+
 
 user_data_dir = os.path.join(os.getenv("LOCALAPPDATA"), r"Google\Chrome\User Data")
 chrome_options = Options()
@@ -66,7 +68,6 @@ def buttonclick(css_selector):
 
 
 def save(div_elements, driver):
-    global processed_storeplaces, unprocessed_storeplaces
     div_elements = WebDriverWait(driver, 30).until(
         EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "div.etWJQ.jym1ob"))
     )
@@ -168,29 +169,11 @@ for i in Storeplace:
                     save(div_elements, driver)
                 else:
                     print("未找到相似的店家。")    
-                    error.append(i)
+                    saveerror(i)
     except Exception as ex: 
         print(f"处理店名 {i} 时出错: {ex}")
-        error.append(i)
-    processed_storeplaces.append(i)
-    unprocessed_storeplaces.remove(i)
+        saveerror(i)
 
 driver.quit()
 
 
-with open(r".\ProcessedStoreplace.csv", mode="w", newline="", encoding="utf-8") as file:
-    writer = csv.writer(file)
-    for item in processed_storeplaces:
-        writer.writerow([item])
-
-with open(
-    r".\UnprocessedStoreplace.csv", mode="w", newline="", encoding="utf-8"
-) as file:
-    writer = csv.writer(file)
-    for item in unprocessed_storeplaces:
-        writer.writerow([item])
-
-with open(r".\ErrorStoreplace.csv", mode="w", newline="", encoding="utf-8") as file:
-    writer = csv.writer(file)
-    for item in error:
-        writer.writerow([item])

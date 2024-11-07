@@ -1,8 +1,9 @@
-#畢比登餐廳加入Google map自動化程式
+# 畢比登餐廳加入Google map自動化程式
 ## 操作說明
-1.關閉google chrome
+關閉google chrome
 
 pip install virtualenv
+
 virtualenv venv
 
 venv\Scripts\activate

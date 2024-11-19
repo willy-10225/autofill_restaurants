@@ -7,8 +7,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
-
-orurl = "https://guide.michelin.com/"
+path=".\step1"
+orurl = "https://guide.michelin.com"
 urllist = ['https://guide.michelin.com/tw/zh_TW/restaurants/3-stars-michelin',
            "https://guide.michelin.com/tw/zh_TW/restaurants/2-stars-michelin",
            "https://guide.michelin.com/tw/zh_TW/restaurants/1-star-michelin",
@@ -70,9 +70,9 @@ for mainurl in urllist:
         print("出现错误:", e)
 
     
-
+    os.makedirs(path, exist_ok=True)
     # 读取 CSV 文件并将内容存储到 orlist 列表中，确保一行一条 URL
-    with open(rF".\step1\{mainurl.split('/')[-1]}.csv", mode="w", newline="", encoding="utf-8") as file:
+    with open(path+rf"\{mainurl.split('/')[-1]}.csv", mode="w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         for url in orlist:
             writer.writerow([url])  # 将每个 URL 作为独立的一行写入

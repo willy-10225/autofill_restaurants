@@ -150,8 +150,6 @@ for filename in files_only:
     # 创建文件夹（如果不存在）
     os.makedirs(success_folder, exist_ok=True)
     os.makedirs(error_folder, exist_ok=True)
-
-
     with open(error_folder+Storename, mode="w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         for item in error:

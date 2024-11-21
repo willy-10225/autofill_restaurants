@@ -12,7 +12,7 @@ import os
 from htmlComparison import htmlComparison
 from difflib import SequenceMatcher
 
-success_file_path = "./step2/success"
+success_file_path = "./step3/3-2"
 error_file_path = "./step3/error"
 os.makedirs(error_file_path, exist_ok=True)
 def getstorename(entry, str1):
@@ -24,7 +24,7 @@ def getstorename(entry, str1):
     return entry  # 如果没有处理，就返回原字符串
 
 def saveerror(item: str,filename: str):
-    with open(error_file_path+"/"+filename, mode="w", newline="", encoding="utf-8") as file:
+    with open(error_file_path+"/"+filename, mode="a", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow([item])
 # 获取文件夹中的所有文件和文件夹
@@ -39,7 +39,7 @@ chrome_options.add_argument("profile-directory=Default")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--headless")  # 无头模式，不显示浏览器界面
+#chrome_options.add_argument("--headless")  # 无头模式，不显示浏览器界面
 driver = webdriver.Chrome(
     service=Service(ChromeDriverManager().install()), options=chrome_options
 )
@@ -51,7 +51,7 @@ def buttonclick(css_selector, index=0):
     :param index: 按钮的索引，默认是第一个（0）
     """
     try:
-        buttons = WebDriverWait(driver, 30).until(
+        buttons = WebDriverWait(driver, 10).until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, css_selector))
         )
         if index < len(buttons):
@@ -63,16 +63,17 @@ def buttonclick(css_selector, index=0):
         print(f"无法点击按钮 {css_selector} 的第 {index} 个: {e}")
 
 def save(div_elements,search_box):
-    div_elements = WebDriverWait(driver, 30).until(
+    
+    div_elements = WebDriverWait(driver, 10).until(
         EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "div.etWJQ.jym1ob"))
     )
-
+    
     if len(div_elements) > 1:
         button = div_elements[1].find_element(By.CSS_SELECTOR, "button.g88MCb.S9kvJb")
         aria_label_value = button.get_attribute("aria-label")
         if aria_label_value == "儲存":
             button.click()
-            suggestion_grid = WebDriverWait(driver, 30).until(
+            suggestion_grid = WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located(
                     (By.CSS_SELECTOR, 'div[aria-label="儲存至清單中"]')
                 )
@@ -85,7 +86,7 @@ def save(div_elements,search_box):
                 './ancestor::div[@aria-checked="false" and @role="menuitemradio"]',
             )
             outer_div.click()
-            WebDriverWait(driver, 30).until(
+            WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located(
                     (By.CSS_SELECTOR, 'button[data-value="已儲存"]')
                 )
@@ -104,34 +105,39 @@ time.sleep(2)
 buttonclick('button[aria-label="菜單"]')
 time.sleep(2)
 buttonclick("button.T2ozWe")
-WebDriverWait(driver, 10).until(
-    EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div.Io6YTe.fontBodyLarge.kR99db.fdkmkc'))
-)
-div_elements = driver.find_elements(By.CSS_SELECTOR, 'div.Io6YTe.fontBodyLarge.kR99db.fdkmkc')
-Storagelist = [div.text for div in div_elements]
-for filenames in files_only:
-    filename=filenames.split('.')[0]
-    if filename in Storagelist:
-        index = files_only.index(filenames)
-        buttonclick("button[aria-label='更多選項']",index)
-        buttonclick("div[data-index='5']")
-        buttonclick("button.okDpye.PpaGLb")
-        
-    buttonclick('button[aria-label="新增清單"]')
-    element = WebDriverWait(driver, 30).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "input.gRsCne.azQIhc"))
-        )
-    search_box = driver.find_element(By.CSS_SELECTOR, "input.gRsCne.azQIhc")
-    search_box.clear()
-    search_box.send_keys(f"{filename}")
-    buttonclick('button.okDpye.PpaGLb')
-    time.sleep(2)
-    buttonclick('button[aria-label="菜單"]')
-    time.sleep(2)
-    buttonclick("button.T2ozWe")
+
+def dropdownmenu(html:str):
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR, html))
+    )
+    div_elements = driver.find_elements(By.CSS_SELECTOR, html)
+    Storagelist = [div.text for div in div_elements]
+    return Storagelist
+# for filenames in files_only:
+#     Storagelist = dropdownmenu('div.Io6YTe.fontBodyLarge.kR99db.fdkmkc')
+#     filename=filenames.split('.')[0]
+#     if filename in Storagelist:
+#         index = Storagelist.index(filename)
+#         buttonclick("button[aria-label='更多選項']",index)
+#         buttonclick("div[data-index='5']")
+#         buttonclick("button.okDpye.PpaGLb")
+#     filename=filenames.split('.')[0]
+#     buttonclick('button[aria-label="新增清單"]')
+#     element = WebDriverWait(driver, 10).until(
+#             EC.visibility_of_element_located((By.CSS_SELECTOR, "input.gRsCne.azQIhc"))
+#         )
+#     search_box = driver.find_element(By.CSS_SELECTOR, "input.gRsCne.azQIhc")
+#     search_box.clear()
+#     search_box.send_keys(f"{filename}")
+#     buttonclick('button.okDpye.PpaGLb')
+#     time.sleep(2)
+#     buttonclick('button[aria-label="菜單"]')
+#     time.sleep(2)
+#     buttonclick("button.T2ozWe")
     
 
 for filename in files_only:
+    filenames=filename.split('.')[0]
     Storeplace = []
     with open(success_file_path+"/"+filename, mode="r", newline="", encoding="utf-8") as file:
         for line in file:
@@ -155,7 +161,7 @@ for filename in files_only:
             # 進入網站
             driver.get("https://www.google.com/maps?authuser=0")
             # 輸入搜尋資料
-            search_box = WebDriverWait(driver, 30).until(
+            search_box = WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located(
                     (By.CSS_SELECTOR, "input.fontBodyMedium.searchboxinput.xiQnY")
                 )
@@ -165,7 +171,7 @@ for filename in files_only:
             time.sleep(3)
             # 等待下拉選單
             if driver.find_elements(By.CSS_SELECTOR, 'div[role="grid"][aria-label="建議"]'):
-                suggestion_grid = WebDriverWait(driver, 30).until(
+                suggestion_grid = WebDriverWait(driver, 10).until(
                     EC.visibility_of_element_located(
                         (By.CSS_SELECTOR, 'div[role="grid"][aria-label="建議"]')
                     )
@@ -179,14 +185,14 @@ for filename in files_only:
                 if div_count == 1:
                     suggestion = div_elements[0]
                     suggestion.click()
-                    save(div_elements,filename)
+                    save(div_elements,filenames)
                 elif div_count > 1:
                     select = htmlComparison(driver.page_source, i)
                     suggestion = div_elements[select]
                     suggestion.click()
-                    save(div_elements,filename)
+                    save(div_elements,filenames)
             else:
-                searchbutton = WebDriverWait(driver, 30).until(
+                searchbutton = WebDriverWait(driver, 10).until(
                     EC.visibility_of_element_located(
                         (By.CSS_SELECTOR, 'button[aria-label="搜尋"]')
                     )
@@ -222,7 +228,7 @@ for filename in files_only:
                     if closest_element:
                         time.sleep(1)
                         closest_element.click()
-                        save(div_elements,filename)
+                        save(div_elements,filenames)
                     else:
                         print("未找到相似的店家。")
                         saveerror(i,filename)

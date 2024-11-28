@@ -46,7 +46,7 @@ chrome_options.add_argument("profile-directory=Default")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-# chrome_options.add_argument("--headless")  # 无头模式，不显示浏览器界面
+chrome_options.add_argument("--headless")  # 无头模式，不显示浏览器界面
 driver = webdriver.Chrome(
     service=Service(ChromeDriverManager().install()), options=chrome_options
 )
@@ -71,13 +71,6 @@ def buttonclick(css_selector, index=0):
             print(f"索引 {index} 超出按钮数量范围（总共有 {len(buttons)} 个按钮）")
     except Exception as e:
         print(f"无法点击按钮 {css_selector} 的第 {index} 个: {e}")
-
-
-driver.get("https://www.google.com/maps?authuser=0")
-time.sleep(2)
-buttonclick('button[aria-label="菜單"]')
-time.sleep(2)
-buttonclick("button.T2ozWe")
 
 
 def getstorename(line, delimiter):
@@ -176,6 +169,13 @@ def dropdownseach(str1):
                 save(filenames, str1)
     except Exception as ex:
         saveerror(str1, filename)
+
+
+driver.get("https://www.google.com/maps?authuser=0")
+time.sleep(2)
+buttonclick('button[aria-label="菜單"]')
+time.sleep(2)
+buttonclick("button.T2ozWe")
 
 
 # for filenames in files_only:

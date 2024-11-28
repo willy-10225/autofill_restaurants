@@ -1,12 +1,14 @@
+import concurrent.futures
 import csv
+import os
+import random
+import time
+
 import requests
 from bs4 import BeautifulSoup
-import concurrent.futures
-import time
-import random
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-import os
+
 
 # 定义函数用于处理单个 URL，增加重试机制
 def fetch_data(url):
@@ -42,6 +44,8 @@ def fetch_data(url):
 def delayed_request(url):
     time.sleep(random.uniform(0.5, 2.0))  # 设置随机延迟，0.5到2秒
     return fetch_data(url)
+
+
 # 并发处理
 # 并发处理的函数，返回失败的 URL 列表
 def process_urls(url_list):
@@ -59,16 +63,19 @@ def process_urls(url_list):
             print(f"已处理: {len(Store)} 个")
     return Store, failed_urls
 
+
 folder_path = r".\step1"
 
 # 获取文件夹中的所有文件和文件夹
 all_files = os.listdir(folder_path)
-files_only = [file for file in all_files if os.path.isfile(os.path.join(folder_path, file))]
+files_only = [
+    file for file in all_files if os.path.isfile(os.path.join(folder_path, file))
+]
 
 # 读取 CSV 文件并将 URL 存储到 orlist 列表中
 for filename in files_only:
     orlist = []
-    with open(f'./step1/{filename}', mode="r", newline="", encoding="utf-8") as file:
+    with open(f"./step1/{filename}", mode="r", newline="", encoding="utf-8") as file:
         reader = csv.reader(file)
         for row in reader:
             orlist.extend(row)  # 将每一行的数据添加到 orlist 中
@@ -111,5 +118,5 @@ for filename in files_only:
             writer = csv.writer(file)
             for url in failed_urls:
                 writer.writerow([url])
-        
+
     print(f"处理完成，共成功处理 {len(all_store)} 个，失败 {len(failed_urls)} 个")

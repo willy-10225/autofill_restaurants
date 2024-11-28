@@ -1,13 +1,16 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
 import csv
-import time
 import os
+import time
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
+
+
 def buttonclick(css_selector):
     try:
         button = WebDriverWait(driver, 30).until(
@@ -17,10 +20,13 @@ def buttonclick(css_selector):
     except Exception as e:
         print(f"无法点击按钮 {css_selector}")
 
+
 folder_path = "./step2/success"
 # 获取文件夹中的所有文件和文件夹
 all_files = os.listdir(folder_path)
-files_only = [file for file in all_files if os.path.isfile(os.path.join(folder_path, file))]
+files_only = [
+    file for file in all_files if os.path.isfile(os.path.join(folder_path, file))
+]
 
 chrome_options = Options()
 chrome_options.add_argument(
@@ -29,7 +35,7 @@ chrome_options.add_argument(
 chrome_options.add_argument("profile-directory=Default")  # 使用默认配置文件
 chrome_options.add_argument("--no-sandbox")  # 禁用沙盒模式
 chrome_options.add_argument("--disable-dev-shm-usage")  # 避免共享内存问题
-#chrome_options.add_argument("--headless")  # 无头模式，不显示浏览器界面
+# chrome_options.add_argument("--headless")  # 无头模式，不显示浏览器界面
 chrome_options.add_argument(
     "--disable-gpu"
 )  # 在部分系统上，禁用 GPU 加速可以提高稳定性
@@ -41,7 +47,9 @@ driver = webdriver.Chrome(
 
 for filename in files_only:
     Storeplace = []
-    with open(folder_path+"/"+filename, mode="r", newline="", encoding="utf-8") as file:
+    with open(
+        folder_path + "/" + filename, mode="r", newline="", encoding="utf-8"
+    ) as file:
         for line in file:
             line = line.strip()  # 去除每行的换行符和首尾空格
             if line:  # 确保不是空行
@@ -51,32 +59,38 @@ for filename in files_only:
     unprocessed_storeplaces = Storeplace[:]  # 尚未处理的店名（开始时是所有店名）
     error = []  # 处理失败的店名
     # 设置 Chrome 配置
-    
+
     driver.get("https://www.google.com/maps?authuser=0")
 
     time.sleep(2)
     buttonclick('button[aria-label="菜單"]')
     buttonclick("button.T2ozWe")
     WebDriverWait(driver, 10).until(
-        EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div.Io6YTe.fontBodyLarge.kR99db.fdkmkc'))
+        EC.presence_of_all_elements_located(
+            (By.CSS_SELECTOR, "div.Io6YTe.fontBodyLarge.kR99db.fdkmkc")
+        )
     )
-    div_elements = driver.find_elements(By.CSS_SELECTOR, 'div.Io6YTe.fontBodyLarge.kR99db.fdkmkc')
+    div_elements = driver.find_elements(
+        By.CSS_SELECTOR, "div.Io6YTe.fontBodyLarge.kR99db.fdkmkc"
+    )
     Storagelist = [div.text for div in div_elements]
     # 確認有無清單
-    if filename.split('.')[0] not in  Storagelist:
+    if filename.split(".")[0] not in Storagelist:
         buttonclick('button[aria-label="新增清單"]')
         element = WebDriverWait(driver, 30).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, "input.gRsCne.azQIhc"))
-            )
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "input.gRsCne.azQIhc"))
+        )
         search_box = driver.find_element(By.CSS_SELECTOR, "input.gRsCne.azQIhc")
         search_box.clear()
         search_box.send_keys(f"{filename.split('.')[0]}")
-        buttonclick('button.okDpye.PpaGLb')
+        buttonclick("button.okDpye.PpaGLb")
         driver.get("https://www.google.com/maps?authuser=0")
     driver.get("https://www.google.com/maps?authuser=0")
     try:
         label_element = WebDriverWait(driver, 30).until(
-            EC.visibility_of_element_located((By.XPATH, f"//*[contains(text(), '{filename.split('.')[0]}')]"))
+            EC.visibility_of_element_located(
+                (By.XPATH, f"//*[contains(text(), '{filename.split('.')[0]}')]")
+            )
         )
         button = label_element.find_element(By.XPATH, "./ancestor::button")
         button.click()
@@ -85,7 +99,6 @@ for filename in files_only:
     time.sleep(1)
     buttonclick("button[aria-label='更多選項']")
     buttonclick("div[data-index='0']")
-
 
     count = 0
     for Storename in Storeplace:
@@ -150,7 +163,7 @@ for filename in files_only:
     # 创建文件夹（如果不存在）
     os.makedirs(success_folder, exist_ok=True)
     os.makedirs(error_folder, exist_ok=True)
-    with open(error_folder+Storename, mode="w", newline="", encoding="utf-8") as file:
+    with open(error_folder + Storename, mode="w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         for item in error:
             writer.writerow([item])

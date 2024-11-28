@@ -1,18 +1,22 @@
 import csv
+
+from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
-path=".\step1"
+
+path = ".\step1"
 orurl = "https://guide.michelin.com"
-urllist = ['https://guide.michelin.com/tw/zh_TW/restaurants/3-stars-michelin',
-           "https://guide.michelin.com/tw/zh_TW/restaurants/2-stars-michelin",
-           "https://guide.michelin.com/tw/zh_TW/restaurants/1-star-michelin",
-           "https://guide.michelin.com/tw/zh_TW/restaurants/bib-gourmand"]
+urllist = [
+    "https://guide.michelin.com/tw/zh_TW/restaurants/3-stars-michelin",
+    "https://guide.michelin.com/tw/zh_TW/restaurants/2-stars-michelin",
+    "https://guide.michelin.com/tw/zh_TW/restaurants/1-star-michelin",
+    "https://guide.michelin.com/tw/zh_TW/restaurants/bib-gourmand",
+]
 # 设置 Chrome 驱动和无头模式
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -43,7 +47,9 @@ for mainurl in urllist:
         a = soup.find("ul", class_="pagination")
         b = [i.find("a").get("href") for i in a.find_all("li")][-2]
         lastpage = int(b.split("/")[-1])
-        a = soup.find("div", class_="row restaurant__list-row js-restaurant__list_items")
+        a = soup.find(
+            "div", class_="row restaurant__list-row js-restaurant__list_items"
+        )
         orlist += [
             orurl + i.find("a", class_="link").get("href")
             for i in a.find_all("div", class_="col-md-6 col-lg-4 col-xl-3")
@@ -69,10 +75,11 @@ for mainurl in urllist:
     except Exception as e:
         print("出现错误:", e)
 
-    
     os.makedirs(path, exist_ok=True)
     # 读取 CSV 文件并将内容存储到 orlist 列表中，确保一行一条 URL
-    with open(path+rf"\{mainurl.split('/')[-1]}.csv", mode="w", newline="", encoding="utf-8") as file:
+    with open(
+        path + rf"\{mainurl.split('/')[-1]}.csv", mode="w", newline="", encoding="utf-8"
+    ) as file:
         writer = csv.writer(file)
         for url in orlist:
             writer.writerow([url])  # 将每个 URL 作为独立的一行写入

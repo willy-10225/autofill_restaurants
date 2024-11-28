@@ -1,6 +1,7 @@
+from difflib import SequenceMatcher
+
 import requests
 from bs4 import BeautifulSoup
-from difflib import SequenceMatcher
 
 
 def htmlComparison(html, target):

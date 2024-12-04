@@ -6,8 +6,9 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from chrome_driver_config import get_chrome_driver
+
 from htmlComparison import htmlComparison
+from setchrome import get_chrome_driver
 
 success_file_path = "./step3/3-2"
 error_file_path = "./step3/error"

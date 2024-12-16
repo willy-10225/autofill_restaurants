@@ -13,13 +13,13 @@ from setchrome import get_chrome_driver
 success_file_path = "./step3/3-2"
 error_file_path = "./step3/error"
 
-sccuess = False
+success = False
 os.makedirs(error_file_path, exist_ok=True)
 
 
-def saveerror(item: str, filename: str, sccuess: bool):
+def saveerror(item: str, filename: str, success: bool):
     global error_file_path
-    if not sccuess:
+    if not success:
         with open(
             os.path.join(error_file_path, filename),
             mode="a",
@@ -91,9 +91,16 @@ def googlemapinput(search):
 
 
 def save(search_box, roop):
-    global driver, sccuess
+    global driver
+    success = True
+
     try:
-        driver.find_element(By.CSS_SELECTOR, ".F7nice")
+        # 等待 .F7nice 元素出现
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".F7nice"))
+        )
+
+        # 等待目标 div 元素加载
         div_elements = WebDriverWait(driver, 10).until(
             EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "div.etWJQ.jym1ob"))
         )
@@ -106,11 +113,15 @@ def save(search_box, roop):
 
             if aria_label_value == "儲存":
                 savebutton.click()
+
+                # 等待弹窗加载
                 suggestion_grid = WebDriverWait(driver, 10).until(
                     EC.visibility_of_element_located(
                         (By.CSS_SELECTOR, 'div[aria-label="儲存至清單中"]')
                     )
                 )
+
+                # 找到对应的搜索列表项
                 label_element = suggestion_grid.find_element(
                     By.XPATH, f'.//div[contains(text(), "{search_box}")]'
                 )
@@ -119,26 +130,28 @@ def save(search_box, roop):
                     './ancestor::div[@aria-checked="false" and @role="menuitemradio"]',
                 )
                 outer_div.click()
+
+                # 验证保存成功
                 WebDriverWait(driver, 10).until(
                     EC.visibility_of_element_located(
                         (By.CSS_SELECTOR, 'button[data-value="已儲存"]')
                     )
                 )
-                sccuess = True
                 print(f"{roop} 已儲存")
-
             else:
-                sccuess = True
                 print(f"{roop} 已儲存 (未点击保存按钮)")
-
         else:
             print("没有足够的 div 元素可供选择")
+
     except Exception as ex:
-        print(ex)
-    time.sleep(3)
+        success = False
+        print(f"保存失败：{ex}")
+
+    return success
 
 
 def dropdownseach(str1):
+    success = False
     try:
         googlemapinput(str1)
         # 等待下拉選單
@@ -157,14 +170,16 @@ def dropdownseach(str1):
             if div_count == 1:
                 suggestion = div_elements[0]
                 suggestion.click()
-                save(filenames, str1)
+                success = save(filenames, str1)
             elif div_count > 1:
                 select = htmlComparison(driver.page_source, str1)
                 suggestion = div_elements[select]
                 suggestion.click()
-                save(filenames, str1)
+                time.sleep(3)
+                success = save(filenames, str1)
     except Exception as ex:
-        print(ex)
+        print("error")
+    return success
 
 
 driver.get("https://www.google.com/maps?authuser=0")
@@ -203,12 +218,12 @@ for filename in files_only:
     ) as file:
         for line in file:
             line = str(line).strip()
-            if "–" in line:
-                VSCplace.append(getstorename(line, "–"))
-            elif "-" in line:
-                VSCplace.append(getstorename(line, "-"))
-            elif line:
-                VSCplace.append(line)
+            # if "–" in line:
+            #     VSCplace.append(getstorename(line, "–"))
+            # elif "-" in line:
+            #     VSCplace.append(getstorename(line, "-"))
+            # elif line:
+            VSCplace.append(line)
     # dict1 = {}
     # for i in VSCplace:
     #     key = i.split(",")[-1].replace(" ", "")
@@ -218,7 +233,7 @@ for filename in files_only:
     #         dict1[key] = []
     #         dict1[key].append(i)
     for i in VSCplace:
-
+        success = False
         googlemapinput(i)
         searchbutton = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located(
@@ -233,10 +248,10 @@ for filename in files_only:
                 )
             )
             if driver.find_elements(By.CSS_SELECTOR, "div.F7nice"):
-                save(filenames, i)
+                success = save(filenames, i)
             else:
-                dropdownseach(i)
+                success = dropdownseach(i)
         except Exception as ex:
-            dropdownseach(i)
-        saveerror(i, filename, sccuess)
+            success = dropdownseach(i)
+        saveerror(i, filename, success)
 driver.quit()
